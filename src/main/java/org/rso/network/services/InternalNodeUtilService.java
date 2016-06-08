@@ -307,6 +307,7 @@ public class InternalNodeUtilService implements NodeUtilService {
                     }
                 }catch (Exception e){
                     log.info(String.format("%s: Exception during election procedure - host %s not found", electionTag, ip));
+                    throw new RuntimeException(String.format("Critical error during election procedure %s", e));
                 }
 
             }
