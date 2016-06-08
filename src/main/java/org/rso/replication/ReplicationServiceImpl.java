@@ -53,6 +53,7 @@ public class ReplicationServiceImpl implements ReplicationService {
 
     private static final String DEFAULT_NODES_PORT = "8080";
     private static final String REPLICATION_URL = "http://{ip}:{port}/utils/replication";
+    private static final String LOCATION_BY_ID_URL = "http://{ip}:{port}/utils/replication/{locationId}";
 
     @PostConstruct
     public void initialize() {
@@ -79,6 +80,32 @@ public class ReplicationServiceImpl implements ReplicationService {
                 .map(Map.Entry::getKey)
                 .collect(toList());
     }
+
+//    public List<UniversityDto> fetchLocationFromNode(@NonNull final Location location, @NonNull final NodeInfo nodeInfo) {
+//
+//        final ResponseEntity<UniversityDto[]> fetchedLocation = restTemplate.getForEntity(
+//                LOCATION_BY_ID_URL,
+//                UniversityDto[].class,
+//                nodeInfo.getNodeIPAddress(),
+//                LOCATION_BY_ID_URL,
+//
+//        );
+//
+//        final UniversityDto[] locationToReplicate = restTemplate.getForObject(
+//                REPLICATION_URL,
+//                UniversityDto[].class,
+//                sourceNode.getNodeIPAddress(),
+//                DEFAULT_NODES_PORT,
+//                location
+//        );
+//
+//        log.info(
+//                String.format("%s %s: Received replication data about location %s from %d [%s]",
+//                        coordinatorTag, replicationTag, location, sourceNode.getNodeId(),
+//                        sourceNode.getNodeIPAddress()
+//                )
+//        );
+//    }
 
     @Override
     public Try<Void> replicateLocation(@NonNull final Location location, @NonNull final NodeInfo nodeInfo) {
@@ -135,7 +162,7 @@ public class ReplicationServiceImpl implements ReplicationService {
 
         return Try.run(() -> {
             final UniversityDto[] locationToReplicate = restTemplate.getForObject(
-                    REPLICATION_URL,
+                    LOCATION_BY_ID_URL,
                     UniversityDto[].class,
                     sourceNode.getNodeIPAddress(),
                     DEFAULT_NODES_PORT,

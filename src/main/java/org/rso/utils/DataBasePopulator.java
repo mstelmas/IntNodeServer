@@ -134,7 +134,29 @@ public class DataBasePopulator {
                 new University("AGH", "1820", Location.MALOPOLSKIE, UniversityType.POLYTECHNIC),
                 new University("Uniwersytet Wroclawski", "1820", Location.DOLNOSLASKIE, UniversityType.UNIVERSITY),
                 new University("Politechnika Rzeszowska", "1820", Location.PODKARPADZKIE, UniversityType.POLYTECHNIC),
-                new University("Uniwersytet Ekonomiczny w Krakowie", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY)
+                new University("Uniwersytet Ekonomiczny w Krakowie", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Warmińsko-Mazurski w Olsztynie", "1820", Location.WARMINSKO_MAZURSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Medyczny w Białymstoku", "1820", Location.PODLASKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Zielonogórski w Zielonej Górze", "1820", Location.LUBUSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Ekonomiczny w Krakowie", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Opolski", "1820", Location.OPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Ekonomiczny w Krakowie", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Mikołaja Kopernika w Toruniu", "1945", Location.KUJAWSKO_POMORSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Adama Mickiewicza w Poznaniu", "1820", Location.WIELKOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Marii Curie-Skłodowskiej w Lublinie", "1820", Location.LUBELSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Łódzki", "1820", Location.LODZKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Ekonomiczny w Katowicach", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Ekonomiczny w Krakowie", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Pedagogiczny im. Komisji Edukacji Narodowej w Krakowie", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Przyrodniczo-Humanistyczny w Siedlcach", "1820", Location.MAZOWIECKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Przyrodniczy we Wrozławiu", "1820", Location.DOLNOSLASKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Technologiczno-Przyrodniczy im. Jana i Jędrzeja Śniadeckich w Bydgoszczy", "1820", Location.KUJAWSKO_POMORSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Przyrodniczy w Poznaniu", "1820", Location.WIELKOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Rolniczy im. Hugona Kołłątaja w Krakowie", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Przyrodniczy w Lublinie", "1820", Location.LUBELSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Technologiczny w Szczecinie", "1820", Location.ZACHODNIO_POMORSKIE, UniversityType.UNIVERSITY),
+                new University("Uniwersytet Technologiczno-Humanistyczny im. Kazimierza Pułaskiego w Radomiu", "1820", Location.MALOPOLSKIE, UniversityType.UNIVERSITY)
+
         );
     }
 }

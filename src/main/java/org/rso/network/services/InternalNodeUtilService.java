@@ -114,7 +114,10 @@ public class InternalNodeUtilService implements NodeUtilService {
 
                         /* Node stopped responding. We need to: */
 
-                        /* 1. Replicate data placed on that node */
+                        /* 1. remove it from a list of available nodes */
+                        appProperty.removeNode(nodeInfo.getNodeId());
+
+                        /* 2. Replicate data placed on that node */
                         final Optional<List<Location>> locationsStoredOnNode = Optional.ofNullable(nodeInfo.getLocations());
 
                         if(!locationsStoredOnNode.isPresent()) {
@@ -154,9 +157,6 @@ public class InternalNodeUtilService implements NodeUtilService {
                                 replicateLocations(locationsStoredOnNode.get());
                             }
                         }
-
-                        /* 2. remove it from a list of available nodes */
-                        appProperty.removeNode(nodeInfo.getNodeId());
 
                         /* 3. Inform all the remaining nodes about changes in network */
                         final NetworkStatusDto updatedNetworkStatusDto = DtoConverters.networkStatusEntityToDto.apply(
