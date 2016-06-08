@@ -223,17 +223,31 @@ public class ReplicationServiceImpl implements ReplicationService {
                             );
                         }).onFailure(e -> {
                     log.warning(
-                            String.format("%s %s: Could not replicate location: %s on node %d [%s]",
+                            String.format("%s %s: Could not replicate location: %s on node %d [%s]. Skipping...",
                                     coordinatorTag, replicationTag, locationToReplicate,
                                     createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress()
                             )
                     );
-                    throw new RuntimeException(
-                            String.format("Could not replicate location %s on node: %d [%s]",
-                                    locationToReplicate, createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress())
-                    );
+//                    throw new RuntimeException(
+//                            String.format("Could not replicate location %s on node: %d [%s]",
+//                                    locationToReplicate, createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress())
+//                    );
                 });
             });
+
+            if(createdNodeInfo.getLocations() == null) {
+                log.warning(
+                        String.format("%s %s: Could not replicate any of the chosen locations on node %d [%s]. Aborting registration...",
+                                coordinatorTag, replicationTag,
+                                createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress()
+                        )
+                );
+
+                throw new RuntimeException(
+                            String.format("Could not replicate any of the chosen locations on node %d [%s]. Aborting registration...",
+                                    createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress())
+                    );
+            }
 
 
         } else {
