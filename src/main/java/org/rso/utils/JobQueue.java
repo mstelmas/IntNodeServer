@@ -1,7 +1,7 @@
 package org.rso.utils;
 
 import lombok.extern.java.Log;
-import org.rso.dto.JobEntityDto;
+import org.rso.storage.dto.JobEntityDto;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;

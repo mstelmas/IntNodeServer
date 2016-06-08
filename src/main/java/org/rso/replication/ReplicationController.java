@@ -2,11 +2,11 @@ package org.rso.replication;
 
 import lombok.NonNull;
 import lombok.extern.java.Log;
-import org.rso.dto.DtoConverters;
-import org.rso.dto.UniversityDto;
-import org.rso.entities.University;
-import org.rso.repositories.UniversityRepo;
-import org.rso.repositories.UniversityRepository;
+import org.rso.DtoConverters;
+import org.rso.storage.dto.UniversityDto;
+import org.rso.storage.entities.University;
+import org.rso.storage.repositories.UniversityRepo;
+import org.rso.storage.repositories.UniversityRepository;
 import org.rso.utils.AppProperty;
 import org.rso.utils.Location;
 import org.springframework.http.ResponseEntity;

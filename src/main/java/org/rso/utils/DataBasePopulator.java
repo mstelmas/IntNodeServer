@@ -2,11 +2,11 @@ package org.rso.utils;
 
 import com.google.common.base.Predicate;
 import javaslang.control.Try;
-import org.rso.dto.GraduateDto;
-import org.rso.entities.FieldOfStudy;
-import org.rso.entities.Graduate;
-import org.rso.entities.University;
-import org.rso.repositories.UniversityRepository;
+import org.rso.storage.dto.GraduateDto;
+import org.rso.storage.entities.FieldOfStudy;
+import org.rso.storage.entities.Graduate;
+import org.rso.storage.entities.University;
+import org.rso.storage.repositories.UniversityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

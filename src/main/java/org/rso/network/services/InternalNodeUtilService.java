@@ -3,7 +3,7 @@ package org.rso.network.services;
 import javaslang.control.Try;
 import lombok.NonNull;
 import lombok.extern.java.Log;
-import org.rso.dto.DtoConverters;
+import org.rso.DtoConverters;
 import org.rso.network.dto.NetworkStatusDto;
 import org.rso.network.dto.NodeStatusDto;
 import org.rso.replication.ReplicationService;

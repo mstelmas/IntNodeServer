@@ -3,7 +3,7 @@ package org.rso.utils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
-import org.rso.exceptions.NodeNotFoundException;
+import org.rso.network.exceptions.NodeNotFoundException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

@@ -1,12 +1,11 @@
 package org.rso.configuration;
 
-import org.rso.services.JobService;
-import org.rso.services.JobServiceImpl;
-import org.rso.tasks.JobTask;
-import org.rso.tasks.JobTaskExecutorService;
+import org.rso.storage.services.JobService;
+import org.rso.storage.services.JobServiceImpl;
+import org.rso.storage.tasks.JobTask;
+import org.rso.storage.tasks.JobTaskExecutorService;
 import org.rso.utils.AppProperty;
 import org.rso.utils.JobQueue;
-import org.rso.utils.Location;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
