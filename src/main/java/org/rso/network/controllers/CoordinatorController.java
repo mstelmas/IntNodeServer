@@ -72,40 +72,16 @@ public class CoordinatorController {
                 .nodeType(allocatedNodeInfo.getNodeType())
                 .build();
 
-        // addEntry entry into appProperty
-
-        appProperty.addAvaiableNode(createdNodeInfo);
-
         // TODO: inform other nodes about network update
 
-        // TODO: do not block for network updates (this can take a looong time)
+        /* Replication */
+        final Try<NodeInfo> replicationResult = replicationServiceImpl.replicateOnNewNode(createdNodeInfo);
 
+        if(replicationResult.isFailure()) {
+            return ResponseEntity.badRequest().build();
+        }
 
-
-        // perform replication on a new node
-        replicationServiceImpl.getTopLocations(replicationReduntancy)
-                .forEach(location ->
-                    Try.run(() -> replicationServiceImpl.replicateLocation(location, createdNodeInfo))
-                            .onSuccess(e -> {
-                                log.info(
-                                        String.format("Successfully replicated data about location: %s on node: %d [%s]",
-                                                location, createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress())
-                                );
-
-                                // TODO: network update!
-
-                                if(createdNodeInfo.getLocations() == null) {
-                                    createdNodeInfo.setLocations(new ArrayList<>());
-                                }
-
-                                createdNodeInfo.getLocations().add(location);
-
-//                                locationMap.addEntry(location, createdNodeInfo);
-                            })
-                );
-
-// TODO: network update!
-//        createdNodeInfo.setLocations(locationMap.getLocationsForNode(createdNodeInfo));
+        appProperty.addAvaiableNode(createdNodeInfo);
 
         final NetworkStatusDto updatedNetworkStatusDto = NetworkStatusDto.builder()
                 .coordinator(DtoConverters.nodeInfoToNodeStatusDto.apply(appProperty.getCoordinatorNode()))
@@ -115,17 +91,13 @@ public class CoordinatorController {
         appProperty.getAvailableNodes().forEach(availableNodeInfo ->
                 nodeNetworkService.setNetworkStatus(availableNodeInfo, updatedNetworkStatusDto)
                         .onFailure(ez ->
-                                                /* A node suddenly stopped responding; we don't need to do anything here though
-                                                   since it will be removed during the next Heartbeat check iteration anyway.
-                                                 */
+                                /* A node suddenly stopped responding; we don't need to do anything here though
+                                    since it will be removed during the next Heartbeat check iteration anyway.
+                                 */
                                 log.info(String.format("Node %s stopped responding during network status update. It should be removed in the next Heartbeat check",
                                         availableNodeInfo.getNodeIPAddress()))
                         )
         );
-
-
-
-        // remmemeber to remove transfered locations from database info
 
         //TODO: remove location from selected nodes...
 

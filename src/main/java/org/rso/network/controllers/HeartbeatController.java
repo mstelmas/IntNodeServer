@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.Optional;
 
 @Log
 @RestController
@@ -28,6 +29,9 @@ public class HeartbeatController {
 
         appProperty.setLastCoordinatorPresence(new Date());
 
-        return DtoConverters.nodeInfoToNodeStatusDto.apply(appProperty.getSelfNode());
+        return DtoConverters.nodeInfoToNodeStatusDto.apply(
+                Optional.ofNullable(appProperty.getSelfNode())
+                    .orElseThrow(() -> new RuntimeException("Critical state in network found. Self node not initialized"))
+        );
     }
 }

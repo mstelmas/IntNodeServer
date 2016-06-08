@@ -96,11 +96,9 @@ public class InternalNodeConnectorService {
                 appProperty.setCoordinatorNode(DtoConverters.nodeStatusDtoToNodeInfo.apply(updatedNetworkStatusDto.getCoordinator()));
                 appProperty.setListOfAvaiableNodes(
                         updatedNetworkStatusDto.getNodes().stream()
-                                .filter(nodeStatusDto -> nodeStatusDto.getNodeId() != createdNodeDto.getNodeId())
                                 .map(DtoConverters.nodeStatusDtoToNodeInfo)
                                 .collect(Collectors.toList())
                 );
-
 
 
             } else {

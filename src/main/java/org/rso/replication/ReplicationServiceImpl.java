@@ -18,12 +18,12 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import javax.xml.soap.Node;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 @Log
 @Service
@@ -44,12 +44,16 @@ public class ReplicationServiceImpl implements ReplicationService {
     @Value("${log.tag.replication}")
     private String replicationTag;
 
+    @Value("${replication.redundancy}")
+    private int replicationReduntancy;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     private final AppProperty appProperty = AppProperty.getInstance();
 
     private static final String DEFAULT_NODES_PORT = "8080";
     private static final String REPLICATION_URL = "http://{ip}:{port}/utils/replication";
+    private static final String LOCATION_BY_ID_URL = "http://{ip}:{port}/utils/replication/{locationId}";
 
     @PostConstruct
     public void initialize() {
@@ -76,6 +80,32 @@ public class ReplicationServiceImpl implements ReplicationService {
                 .map(Map.Entry::getKey)
                 .collect(toList());
     }
+
+//    public List<UniversityDto> fetchLocationFromNode(@NonNull final Location location, @NonNull final NodeInfo nodeInfo) {
+//
+//        final ResponseEntity<UniversityDto[]> fetchedLocation = restTemplate.getForEntity(
+//                LOCATION_BY_ID_URL,
+//                UniversityDto[].class,
+//                nodeInfo.getNodeIPAddress(),
+//                LOCATION_BY_ID_URL,
+//
+//        );
+//
+//        final UniversityDto[] locationToReplicate = restTemplate.getForObject(
+//                REPLICATION_URL,
+//                UniversityDto[].class,
+//                sourceNode.getNodeIPAddress(),
+//                DEFAULT_NODES_PORT,
+//                location
+//        );
+//
+//        log.info(
+//                String.format("%s %s: Received replication data about location %s from %d [%s]",
+//                        coordinatorTag, replicationTag, location, sourceNode.getNodeId(),
+//                        sourceNode.getNodeIPAddress()
+//                )
+//        );
+//    }
 
     @Override
     public Try<Void> replicateLocation(@NonNull final Location location, @NonNull final NodeInfo nodeInfo) {
@@ -132,7 +162,7 @@ public class ReplicationServiceImpl implements ReplicationService {
 
         return Try.run(() -> {
             final UniversityDto[] locationToReplicate = restTemplate.getForObject(
-                    REPLICATION_URL,
+                    LOCATION_BY_ID_URL,
                     UniversityDto[].class,
                     sourceNode.getNodeIPAddress(),
                     DEFAULT_NODES_PORT,
@@ -169,5 +199,156 @@ public class ReplicationServiceImpl implements ReplicationService {
                 );
             }
         });
+    }
+
+    @Override
+    public Try<NodeInfo> replicateOnNewNode(@NonNull final NodeInfo createdNodeInfo) {
+
+        /* Get locations that are not duplicated enough */
+        final Map<Location, List<NodeInfo>> locationsNotMeetingRedundancyNeeds = getLocationsNotMeetingRedundancyNeeds(replicationReduntancy);
+
+        /* if all locations meet redundancy needs, force a "random" replication */
+        if(locationsNotMeetingRedundancyNeeds.isEmpty()) {
+
+            log.info(
+                    String.format("%s %s: Every location meets current data redundancy needs. Performing forced replication!",
+                            coordinatorTag, replicationTag)
+            );
+
+            final Map<Location, List<NodeInfo>> replicationMap = appProperty.getReplicationMap();
+
+            final int totalLocations = replicationMap.size();
+
+            final int desiredLocationsToReplicateNumber = totalLocations / (appProperty.getAvailableNodes().size() + 2);
+
+            log.info(
+                    String.format("%s %s: Desired locations for replications number: %d",
+                            coordinatorTag, replicationTag, desiredLocationsToReplicateNumber)
+            );
+
+            final Map<Location, NodeInfo> locationsToReplicate = getTopLocations(desiredLocationsToReplicateNumber, replicationMap);
+
+            locationsToReplicate.entrySet().forEach(locationToReplicateEntrySet -> {
+                final Location locationToReplicate = locationToReplicateEntrySet.getKey();
+                final NodeInfo sourceNode = locationToReplicateEntrySet.getValue();
+
+
+                // TODO: remove from source
+                replicateLocation(locationToReplicate, sourceNode, createdNodeInfo)
+                        .onSuccess((e) -> {
+                            if(createdNodeInfo.getLocations() == null) {
+                                createdNodeInfo.setLocations(new ArrayList<>());
+                            }
+
+                            createdNodeInfo.getLocations().add(locationToReplicate);
+
+                            log.info(
+                                    String.format("%s %s: Successfully replicated: %s on node %d [%s]",
+                                            coordinatorTag, replicationTag, locationToReplicate,
+                                            createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress()
+                                    )
+                            );
+                        }).onFailure(e -> {
+                    log.warning(
+                            String.format("%s %s: Could not replicate location: %s on node %d [%s]. Skipping...",
+                                    coordinatorTag, replicationTag, locationToReplicate,
+                                    createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress()
+                            )
+                    );
+//                    throw new RuntimeException(
+//                            String.format("Could not replicate location %s on node: %d [%s]",
+//                                    locationToReplicate, createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress())
+//                    );
+                });
+            });
+
+            if(createdNodeInfo.getLocations() == null) {
+                log.warning(
+                        String.format("%s %s: Could not replicate any of the chosen locations on node %d [%s]. Aborting registration...",
+                                coordinatorTag, replicationTag,
+                                createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress()
+                        )
+                );
+
+                throw new RuntimeException(
+                            String.format("Could not replicate any of the chosen locations on node %d [%s]. Aborting registration...",
+                                    createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress())
+                    );
+            }
+
+
+        } else {
+            /* otherwise replicate data not meeting redundancy needs */
+
+            log.info(
+                    String.format("%s %s: Found %d locations that do not meet current data redundancy needs",
+                    coordinatorTag, replicationTag, locationsNotMeetingRedundancyNeeds.size()
+            ));
+
+            final NodeInfo coordinatorNode = appProperty.getCoordinatorNode();
+
+            locationsNotMeetingRedundancyNeeds.entrySet().forEach(locationListEntry -> {
+
+                final Location locationToReplicate = locationListEntry.getKey();
+
+                Try.run(() -> {
+
+                    if (locationListEntry.getValue().contains(coordinatorNode)) {
+                        replicateLocation(locationToReplicate, createdNodeInfo);
+                    } else {
+                        replicateLocation(locationToReplicate, locationListEntry.getValue().get(0));
+                    }
+                }).onSuccess((d) -> {
+                    if(createdNodeInfo.getLocations() == null) {
+                        createdNodeInfo.setLocations(new ArrayList<>());
+                    }
+
+                    createdNodeInfo.getLocations().add(locationToReplicate);
+
+                    log.info(
+                            String.format("%s %s: Successfully replicated: %s on node %d [%s]",
+                                    coordinatorTag, replicationTag, locationToReplicate,
+                                    createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress()
+                            )
+                    );
+
+                }).onFailure(throwable -> {
+                    log.warning(
+                            String.format("%s %s: Could not replicate location: %s on node %d [%s]",
+                                    coordinatorTag, replicationTag, locationToReplicate,
+                                    createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress()
+                            )
+                    );
+                    throw new RuntimeException(
+                            String.format("Could not replicate location %s on node: %d [%s]",
+                                    locationToReplicate, createdNodeInfo.getNodeId(), createdNodeInfo.getNodeIPAddress())
+                    );
+                });
+            });
+        }
+
+        return Try.success(createdNodeInfo);
+    }
+
+    private Map<Location, List<NodeInfo>> getLocationsNotMeetingRedundancyNeeds(final int redundancy) {
+        return appProperty.getReplicationMap().entrySet().stream()
+                .filter(locationListEntry -> locationListEntry.getValue().size() < redundancy)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private Map<Location, NodeInfo> getTopLocations(final int topLocations, final Map<Location, List<NodeInfo>> replicationMap) {
+
+        final int locationEntriesNumber = replicationMap.size();
+
+        if(topLocations < 1 || topLocations > locationEntriesNumber) {
+            throw new RuntimeException(
+                    String.format("Cannot retrieve %d topLocations locations from location map of %d entries", topLocations, locationEntriesNumber)
+            );
+        }
+
+        return replicationMap.entrySet().stream()
+                .sorted((es1, es2) -> -Integer.compare(es1.getValue().size(), es2.getValue().size()))
+                .limit(topLocations)
+                .collect(toMap(Map.Entry::getKey, locationListEntry -> locationListEntry.getValue().get(0)));
     }
 }
