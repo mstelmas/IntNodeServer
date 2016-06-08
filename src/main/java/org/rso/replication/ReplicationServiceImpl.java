@@ -20,7 +20,9 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,12 @@ public class ReplicationServiceImpl implements ReplicationService {
 
     @Value("${timeout.request.connect}")
     private int connectionTimeout;
+
+    @Value("${log.tag.coordinator}")
+    private String coordinatorTag;
+
+    @Value("${log.tag.replication}")
+    private String replicationTag;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -67,7 +75,7 @@ public class ReplicationServiceImpl implements ReplicationService {
         }
 
         return replicationMap.entrySet().stream()
-                .sorted((es1, es2) -> -Integer.compare(es1.getValue().size(), es2.getValue().size()))
+                .sorted((es1, es2) -> Integer.compare(es1.getValue().size(), es2.getValue().size()))
                 .limit(topLocations)
                 .map(Map.Entry::getKey)
                 .collect(toList());
@@ -78,32 +86,43 @@ public class ReplicationServiceImpl implements ReplicationService {
     @Override
     public Try<Void> replicateLocation(@NonNull final Location location, @NonNull final NodeInfo nodeInfo) {
 
-        log.info(String.format("Replicating %s on node: %d[%s]", location, nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress()));
+        return Try.run(() -> {
 
-        final List<UniversityDto> universitiesForLocationDto = Optional.ofNullable(universityRepo.findByLocation(location))
-                .orElseThrow(() -> new RuntimeException(
-                        String.format("No universities found for location: %s", location.toString()))
-                ).stream().map(DtoConverters.universityEntityToDto).collect(Collectors.toList());
+            log.info(
+                    String.format("%s %s: Replicating location %s on node: %d [%s]",
+                            coordinatorTag, replicationTag, location,
+                            nodeInfo.getNodeId(),
+                            nodeInfo.getNodeIPAddress())
+            );
+
+            final List<UniversityDto> universitiesForLocationDto = Optional.ofNullable(universityRepo.findByLocation(location))
+                    .orElseThrow(() -> new RuntimeException(
+                            String.format("No universities found for location: %s", location.toString()))
+                    ).stream().map(DtoConverters.universityEntityToDto).collect(Collectors.toList());
 
 
-        final ResponseEntity<Void> replicationResponseEntity = restTemplate.postForEntity (
-                REPLICATION_URL,
-                universitiesForLocationDto,
-                Void.class,
-                nodeInfo.getNodeIPAddress(),
-                DEFAULT_NODES_PORT
-        );
+            final ResponseEntity<Void> replicationResponseEntity = restTemplate.postForEntity (
+                    REPLICATION_URL,
+                    universitiesForLocationDto,
+                    Void.class,
+                    nodeInfo.getNodeIPAddress(),
+                    DEFAULT_NODES_PORT
+            );
 
-        if(replicationResponseEntity.getStatusCode() != HttpStatus.OK) {
-            log.warning(String.format("Could replicate location: %s to node %d[%s]", location, nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress()));
-            throw new RuntimeException(String.format("Could not replicate data to node: %d[%s]", nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress()));
-        }
-
-        return Try.success(null);
+            if(replicationResponseEntity.getStatusCode() != HttpStatus.OK) {
+                log.warning(String.format("Could replicate location: %s to node %d[%s]", location, nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress()));
+                throw new RuntimeException(String.format("Could not replicate data to node: %d[%s]", nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress()));
+            }
+        });
     }
 
     @Override
     public Try<Void> replicateLocation(@NonNull final Location location, @NonNull final NodeInfo sourceNode, @NonNull final NodeInfo destNode) {
+
+        /* If we are replicating from coordinator, there is no need for remote downloading of the content */
+        if (sourceNode.equals(appProperty.getCoordinatorNode())) {
+            return replicateLocation(location, destNode);
+        }
 
         return Try.run(() -> {
             final UniversityDto[] locationToReplicate = restTemplate.getForObject(
@@ -129,28 +148,6 @@ public class ReplicationServiceImpl implements ReplicationService {
                 throw new RuntimeException(String.format("Could not replicate data to node: %d[%s]", destNode.getNodeId(), destNode.getNodeIPAddress()));
             }
         });
-    }
-
-
-    private Map<Location, List<NodeInfo>> toReplicationMap(final List<NodeStatusDto> internalNodes) {
-
-        final Map<Location, List<NodeInfo>> replicationMap = new HashMap<>();
-
-        internalNodes.stream()
-                .map(DtoConverters.nodeStatusDtoToNodeInfo)
-                .forEach(nodeInfo ->
-                    nodeInfo.getLocations().forEach(location -> {
-                        if(replicationMap.containsKey(location)) {
-                            replicationMap.get(location).add(nodeInfo);
-                        } else {
-                            final List<NodeInfo> nodeInfos = new ArrayList<>();
-                            nodeInfos.add(nodeInfo);
-                            replicationMap.put(location, nodeInfos);
-                        }
-                    })
-                );
-
-        return replicationMap;
     }
 
     private final Predicate<NodeStatusDto> INTERNAL_NODE = nodeStatusDto -> NodeType.valueOf(nodeStatusDto.getNodeType()).equals(NodeType.INTERNAL);

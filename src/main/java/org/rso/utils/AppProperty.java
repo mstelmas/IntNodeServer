@@ -3,10 +3,7 @@ package org.rso.utils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
-import org.rso.dto.DtoConverters;
 import org.rso.exceptions.NodeNotFoundException;
-import org.rso.network.dto.NetworkStatusDto;
-import org.rso.network.dto.NodeStatusDto;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -96,7 +93,7 @@ public class AppProperty {
         this.listOfAvaiableNodes.add(n);
     }
 
-    public synchronized void removeUnAvaiableNode(int nodeId){
+    public synchronized void removeNode(int nodeId){
         this.listOfAvaiableNodes = listOfAvaiableNodes.stream().
                                     filter(p -> p.getNodeId() != nodeId).
                                     collect(Collectors.toCollection(ArrayList::new));

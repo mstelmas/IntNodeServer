@@ -46,6 +46,12 @@ public class InternalNodeUtilService implements NodeUtilService {
     @Value("${log.tag.heartbeat}")
     private String heartbeatTag;
 
+    @Value("${log.tag.replication}")
+    private String replicationTag;
+
+    @Value("${log.tag.management}")
+    private String managementTag;
+
     @Value("${timeout.request.read}")
     private int readTimeout;
 
@@ -98,23 +104,37 @@ public class InternalNodeUtilService implements NodeUtilService {
                                         coordinatorTag, heartbeatTag, nodeInfo.getNodeIPAddress())
                         );
 
-                        /* Node is not responding. We need to: */
-
+                        /* Node stopped responding. We need to: */
                         /* 1. remove it from a list of available nodes */
-                        appProperty.removeUnAvaiableNode(nodeInfo.getNodeId());
+                        appProperty.removeNode(nodeInfo.getNodeId());
 
                         /* 2. Replicate data placed on that node */
-                        final List<Location> locationsStoredOnNode = nodeInfo.getLocations();
+                        final Optional<List<Location>> locationsStoredOnNode = Optional.ofNullable(nodeInfo.getLocations());
 
-                        if(locationsStoredOnNode.isEmpty()) {
+                        if(!locationsStoredOnNode.isPresent()) {
                             log.info(
-                                    String.format("%s %s: Node %s did not store any data! There is no need for any replication!",
-                                            coordinatorTag, heartbeatTag, nodeInfo.getNodeIPAddress())
+                                    String.format("%s %s: Node %d [%s] contains uninitialized reference to collection of locations." +
+                                            "Data integrity might be 'compromised'. Aborting replication!",
+                                            coordinatorTag, replicationTag, nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress())
+                            );
+
+                            throw new RuntimeException(
+                                    String.format("Uninitialized reference to locations stored on node %d [%s]",
+                                            nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress())
+                            );
+                        }
+
+                        if(locationsStoredOnNode.get().isEmpty()) {
+                            log.info(
+                                    String.format("%s %s: Node %d [%s] did not store any data! There is no need for any replication!",
+                                            coordinatorTag, replicationTag, nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress())
                             );
                         } else {
                             log.info(
-                                    String.format("%s %s: Node %s stored the following data: %s. The need for data replication is real :(",
-                                            coordinatorTag, heartbeatTag, nodeInfo.getNodeIPAddress(), nodeInfo.getLocations())
+                                    String.format("%s %s: Node %d [%s] stored the following data: %s. The need for data replication is real :(",
+                                            coordinatorTag, replicationTag,
+                                            nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress(),
+                                            nodeInfo.getLocations())
                             );
 
 
@@ -122,21 +142,18 @@ public class InternalNodeUtilService implements NodeUtilService {
 
                             if(currentNetworkStatus.getNodes().isEmpty()) {
                                 log.info(
-                                        String.format("%s %s: Network does not contain any nodes. Aborting replication...", coordinatorTag, heartbeatTag)
+                                        String.format("%s %s: Network does not contain any nodes. Aborting replication...", coordinatorTag, replicationTag)
                                 );
                             } else {
-                                replicateLocations(nodeInfo.getLocations());
+                                replicateLocations(locationsStoredOnNode.get());
                             }
-
-
                         }
 
 
                         /* 3. Inform all the remaining nodes about changes in network */
-                        final NetworkStatusDto updatedNetworkStatusDto = NetworkStatusDto.builder()
-                                .coordinator(DtoConverters.nodeInfoToNodeStatusDto.apply(appProperty.getCoordinatorNode()))
-                                .nodes(appProperty.getAvailableNodes().stream().map(DtoConverters.nodeInfoToNodeStatusDto).collect(toList()))
-                                .build();
+                        final NetworkStatusDto updatedNetworkStatusDto = DtoConverters.networkStatusEntityToDto.apply(
+                                appProperty.getNetworkStatus()
+                        );
 
                         appProperty.getAvailableNodes().forEach(availableNodeInfo ->
                                 nodeNetworkService.setNetworkStatus(availableNodeInfo, updatedNetworkStatusDto)
@@ -145,16 +162,14 @@ public class InternalNodeUtilService implements NodeUtilService {
                                                    since it will be removed during the next Heartbeat check iteration anyway.
                                                  */
                                                 log.info(String.format("%s %s: Node %s stopped responding during network status update. It should be removed in the next Heartbeat check",
-                                                        coordinatorTag, heartbeatTag, availableNodeInfo.getNodeIPAddress()))
+                                                        coordinatorTag, managementTag, availableNodeInfo.getNodeIPAddress()))
                                         )
                         );
-
-
                     })
         );
     }
 
-    // replication algorithm
+    /* Replication Algorithm */
     private Try<Void> replicateLocations(@NonNull final List<Location> locations) {
 
         final Map<Location, List<NodeInfo>> replicationMap = appProperty.getReplicationMap();
@@ -165,48 +180,78 @@ public class InternalNodeUtilService implements NodeUtilService {
 
             if(nodesWithLocation.size() >= replicationRedundancy) {
                 log.info(
-                        String.format("Location %s is already duplicated %d times. Skipping this one...",
+                        String.format("%s %s: Location %s is already duplicated %d times. Skipping this one...",
+                                coordinatorTag, replicationTag,
                                 locationToReplicate, nodesWithLocation.size())
                 );
             } else if(nodesWithLocation.size() == 0 || nodesWithLocation.isEmpty()){
                 log.warning(
-                        String.format("Location %s is not stored on any other node! It has been lost for eternity...",
-                                locationToReplicate)
+                        String.format("%s %s: Location %s is not stored on any other node! It has been lost for eternity...",
+                                coordinatorTag, replicationTag, locationToReplicate)
                 );
             } else {
-                // pick a random/first node with the location
+                final NodeInfo replicationSource = pickReplicationSourceNode(nodesWithLocation);
 
-                final NodeInfo replicationSource = pickReplicationSource(nodesWithLocation);
-                final NodeInfo replicationDest = pickReplicationDest(locationToReplicate, replicationMap);
+                final NodeInfo replicationDestination = pickReplicationDestNode(locationToReplicate, replicationMap, replicationSource)
+                        .orElseThrow(() -> new RuntimeException("No available node found for replication destination!"));
 
                 log.info(
-                        String.format("Performing replication of location: %s from source: %s to destination: %s",
-                                locationToReplicate, replicationSource.getNodeIPAddress(), replicationDest.getNodeIPAddress())
+                        String.format("%s %s: Performing replication of location: %s from source node: %d [%s] to destination: %d [%s]",
+                                coordinatorTag, replicationTag,
+                                locationToReplicate,
+                                replicationSource.getNodeId(), replicationSource.getNodeIPAddress(),
+                                replicationDestination.getNodeId(), replicationDestination.getNodeIPAddress())
                 );
 
-                replicationService.replicateLocation(locationToReplicate, replicationSource, replicationDest)
-                        .onSuccess((e) -> log.info("Successfully replicated! :)"))
-                        .onFailure(Throwable::printStackTrace);
+                replicationService.replicateLocation(locationToReplicate, replicationSource, replicationDestination)
+                        .onSuccess(e -> {
+                            log.info(
+                                    String.format("%s %s: Successfully replicated location %s on node %d [%s]",
+                                            coordinatorTag, replicationTag, locationToReplicate,
+                                            replicationDestination.getNodeId(), replicationDestination.getNodeIPAddress())
+                            );
+
+                            appProperty.getNodeById(replicationDestination.getNodeId()).getLocations().add(locationToReplicate);
+                        })
+                        .onFailure(e -> {
+                            log.warning(
+                                    String.format("%s %s: Could not replicate location %s on node %d [%s] (reason: %s)",
+                                            coordinatorTag, replicationTag, locationToReplicate,
+                                            replicationDestination.getNodeId(), replicationDestination.getNodeIPAddress(),
+                                            e.getMessage())
+                            );
+                            throw new RuntimeException(
+                                    String.format("Could not replicate location %s on node %d [%s] because of %s",
+                                            locationToReplicate, replicationDestination.getNodeId(), replicationDestination.getNodeIPAddress(),
+                                            e.getMessage()
+                                    )
+                            );
+                        });
 
             }
         });
-
-
         return Try.success(null);
     }
 
-    private NodeInfo pickReplicationDest(Location locationToReplicate, Map<Location, List<NodeInfo>> replicationMap) {
+    /* We want to return a node which:
+            1. Does not contain replicated location
+            2. Stores the lowest number of locations
+            3. Is no equal to sourceNode
+     */
+    private Optional<NodeInfo> pickReplicationDestNode(@NonNull final Location locationToReplicate,
+                                                       @NonNull final Map<Location, List<NodeInfo>> replicationMap,
+                                                       @NonNull final NodeInfo sourceNode) {
         return replicationMap.entrySet().stream()
                 .filter(locationListEntry -> !locationListEntry.getKey().equals(locationToReplicate))
-                .map(Map.Entry::getValue)
-                .findAny()
-                .orElseThrow(() -> new RuntimeException("Cannot return node for replication destination"))
-                .get(0);
+                .sorted((es1, es2) -> Integer.compare(es1.getValue().size(), es2.getValue().size()))
+                .flatMap(locationListEntry -> locationListEntry.getValue().stream())
+                .filter(nodeInfo -> !nodeInfo.equals(sourceNode))
+                .findAny();
     }
 
-    // simplest algorithm of picking nodes...
-    private NodeInfo pickReplicationSource(@NonNull final List<NodeInfo> nodesWithLocation) {
-        return nodesWithLocation.get(0);
+    /* We want to return a node which will be used as a location source */
+    private NodeInfo pickReplicationSourceNode(@NonNull final List<NodeInfo> nodesWithLocation) {
+        return nodesWithLocation.get(0); // despite looking suspiciously, this is actually safe!
     }
 
 
@@ -281,7 +326,7 @@ public class InternalNodeUtilService implements NodeUtilService {
                 .nodeType(NodeType.INTERNAL_COORDINATOR)
                 .build();
 
-        appProperty.removeUnAvaiableNode(currentSelfNode.getNodeId());
+        appProperty.removeNode(currentSelfNode.getNodeId());
 
         appProperty.setCoordinatorNode(newCoordinatorNode);
         appProperty.setSelfNode(newCoordinatorNode);

@@ -12,4 +12,5 @@ public interface NodeNetworkService {
     Try<NetworkStatusDto> getNetworkStatus(@NonNull final NodeInfo nodeInfo);
     Try<NodeStatusDto> getHeartbeat(@NonNull final NodeInfo nodeInfo);
     Try<Void> setNetworkStatus(@NonNull final NodeInfo nodeInfo, @NonNull final NetworkStatusDto networkStatusDto);
+
 }

@@ -26,6 +26,12 @@ public class NodeNetworkServiceImpl implements NodeNetworkService {
     @Value("${timeout.request.connect}")
     private int connectionTimeout;
 
+    @Value("${log.tag.coordinator}")
+    private String coordinatorTag;
+
+    @Value("${log.tag.management}")
+    private String managementTag;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     private final AppProperty appProperty = AppProperty.getInstance();
@@ -102,8 +108,19 @@ public class NodeNetworkServiceImpl implements NodeNetworkService {
 
             if(networkStatusUpdateEntity.getStatusCode() != HttpStatus.NO_CONTENT) {
                     /* TODO: This might create some integrity issues. Consider what to do here... */
+                log.warning(
+                        String.format("%s %s: Unable to update network status in node %d [%s]",
+                        coordinatorTag, managementTag,
+                        nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress())
+                );
                 throw new RuntimeException("Unable to update network status in node: " + nodeInfo.getNodeId());
             }
+
+            log.info(
+                    String.format("%s %s: Updated network status successfully sent to node %d [%s]",
+                    coordinatorTag, managementTag,
+                    nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress())
+            );
         });
     }
 }
