@@ -4,6 +4,7 @@ import javaslang.control.Try;
 import lombok.NonNull;
 import lombok.extern.java.Log;
 import org.rso.DtoConverters;
+import org.rso.network.NetworkStatus;
 import org.rso.network.dto.NetworkStatusDto;
 import org.rso.network.dto.NodeStatusDto;
 import org.rso.replication.ReplicationService;

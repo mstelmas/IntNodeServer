@@ -3,6 +3,7 @@ package org.rso.replication;
 import lombok.NonNull;
 import lombok.extern.java.Log;
 import org.rso.DtoConverters;
+import org.rso.network.dto.NodeStatusDto;
 import org.rso.storage.dto.UniversityDto;
 import org.rso.storage.entities.University;
 import org.rso.storage.repositories.UniversityRepo;
@@ -14,8 +15,11 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toMap;
 
 @Log
 @RestController
@@ -62,5 +66,16 @@ public class ReplicationController {
         universityRepo.delete(universitiesByLocation);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @RequestMapping(value = "/replication/map", method = RequestMethod.GET)
+    public Map<Location, List<NodeStatusDto>> getReplicationMap() {
+        return appProperty.getReplicationMap().entrySet().stream()
+                .collect(toMap(
+                            Map.Entry::getKey,
+                            locationListEntry -> locationListEntry.getValue().stream()
+                                                .map(DtoConverters.nodeInfoToNodeStatusDtoWithoutLocations)
+                                                .collect(Collectors.toList())
+                ));
     }
 }

@@ -1,16 +1,17 @@
 package org.rso;
 
+import org.rso.network.NetworkStatus;
+import org.rso.network.dto.NetworkStatusDto;
+import org.rso.network.dto.NodeStatusDto;
 import org.rso.storage.dto.GraduateDto;
 import org.rso.storage.dto.UniversityDto;
 import org.rso.storage.entities.Graduate;
 import org.rso.storage.entities.University;
-import org.rso.network.dto.NetworkStatusDto;
-import org.rso.network.dto.NodeStatusDto;
-import org.rso.utils.NetworkStatus;
 import org.rso.utils.NodeInfo;
 import org.rso.utils.NodeType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -25,6 +26,14 @@ public class DtoConverters {
                     .nodeIPAddress(nodeInfo.getNodeIPAddress())
                     .nodeType(nodeInfo.getNodeType().name())
                     .locations(nodeInfo.getLocations())
+                    .build();
+
+    public static Function<NodeInfo, NodeStatusDto> nodeInfoToNodeStatusDtoWithoutLocations = nodeInfo ->
+            NodeStatusDto.builder()
+                    .nodeId(nodeInfo.getNodeId())
+                    .nodeIPAddress(nodeInfo.getNodeIPAddress())
+                    .nodeType(nodeInfo.getNodeType().name())
+                    .locations(Collections.emptyList())
                     .build();
 
     public static Function<NodeStatusDto, NodeInfo> nodeStatusDtoToNodeInfo  = nodeStatusDto ->
