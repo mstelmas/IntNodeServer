@@ -74,7 +74,7 @@ public class AppProperty {
     }
 
     public synchronized void setLastCoordinatorPresence(Date lastCoordinatorPresence) {
-        log.info("aktualizujemy date obecnosci koordynatora "+DataTimeLogger.logTime(lastCoordinatorPresence));
+        log.info("Network coordinator last seen at " + DataTimeLogger.logTime(lastCoordinatorPresence));
         this.lastCoordinatorPresence = lastCoordinatorPresence;
     }
 

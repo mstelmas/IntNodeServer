@@ -88,6 +88,13 @@ public class InternalNodeUtilService implements NodeUtilService {
             return;
         }
 
+        final NodeInfo selfNode = Optional.ofNullable(appProperty.getSelfNode())
+                .orElseThrow(() -> new RuntimeException("Critical state in network! Self node not initialized during Heartbeat"));
+
+        if(!selfNode.equals(appProperty.getCoordinatorNode())) {
+            throw new RuntimeException("Critical state in network! Heartbeat invoked by non coordinator!");
+        }
+
         log.info(String.format("%s %s: Running heartbeat checks (%s nodes)", coordinatorTag, heartbeatTag, appProperty.getAvailableNodes().size()));
 
         appProperty.getAvailableNodes().forEach(nodeInfo ->
@@ -106,10 +113,8 @@ public class InternalNodeUtilService implements NodeUtilService {
                         );
 
                         /* Node stopped responding. We need to: */
-                        /* 1. remove it from a list of available nodes */
-                        appProperty.removeNode(nodeInfo.getNodeId());
 
-                        /* 2. Replicate data placed on that node */
+                        /* 1. Replicate data placed on that node */
                         final Optional<List<Location>> locationsStoredOnNode = Optional.ofNullable(nodeInfo.getLocations());
 
                         if(!locationsStoredOnNode.isPresent()) {
@@ -150,6 +155,8 @@ public class InternalNodeUtilService implements NodeUtilService {
                             }
                         }
 
+                        /* 2. remove it from a list of available nodes */
+                        appProperty.removeNode(nodeInfo.getNodeId());
 
                         /* 3. Inform all the remaining nodes about changes in network */
                         final NetworkStatusDto updatedNetworkStatusDto = DtoConverters.networkStatusEntityToDto.apply(
