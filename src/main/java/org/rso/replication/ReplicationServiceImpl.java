@@ -5,12 +5,10 @@ import lombok.NonNull;
 import lombok.extern.java.Log;
 import org.rso.dto.DtoConverters;
 import org.rso.dto.UniversityDto;
-import org.rso.network.dto.NodeStatusDto;
 import org.rso.repositories.UniversityRepo;
 import org.rso.utils.AppProperty;
 import org.rso.utils.Location;
 import org.rso.utils.NodeInfo;
-import org.rso.utils.NodeType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +21,6 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -60,7 +57,6 @@ public class ReplicationServiceImpl implements ReplicationService {
         ((SimpleClientHttpRequestFactory)restTemplate.getRequestFactory()).setConnectTimeout(connectionTimeout);
     }
 
-    // remember to remove assigned nodes from list
     @Override
     public List<Location> getTopLocations(final int topLocations) {
 
@@ -81,8 +77,6 @@ public class ReplicationServiceImpl implements ReplicationService {
                 .collect(toList());
     }
 
-
-    // TODO: Try
     @Override
     public Try<Void> replicateLocation(@NonNull final Location location, @NonNull final NodeInfo nodeInfo) {
 
@@ -98,7 +92,9 @@ public class ReplicationServiceImpl implements ReplicationService {
             final List<UniversityDto> universitiesForLocationDto = Optional.ofNullable(universityRepo.findByLocation(location))
                     .orElseThrow(() -> new RuntimeException(
                             String.format("No universities found for location: %s", location.toString()))
-                    ).stream().map(DtoConverters.universityEntityToDto).collect(Collectors.toList());
+                    ).stream()
+                        .map(DtoConverters.universityEntityToDto)
+                        .collect(Collectors.toList());
 
 
             final ResponseEntity<Void> replicationResponseEntity = restTemplate.postForEntity (
@@ -110,8 +106,18 @@ public class ReplicationServiceImpl implements ReplicationService {
             );
 
             if(replicationResponseEntity.getStatusCode() != HttpStatus.OK) {
-                log.warning(String.format("Could replicate location: %s to node %d[%s]", location, nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress()));
-                throw new RuntimeException(String.format("Could not replicate data to node: %d[%s]", nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress()));
+                log.warning(
+                        String.format("%s %s: Could not replicate location: %s on node %d [%s] (HTTP Status: %s)",
+                                coordinatorTag, replicationTag, location,
+                                nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress(),
+                                replicationResponseEntity.getStatusCode()
+                        )
+                );
+                throw new RuntimeException(
+                        String.format("Could not replicate location %s on node: %d [%s] (HTTP Status: %s)",
+                                location, nodeInfo.getNodeId(), nodeInfo.getNodeIPAddress(),
+                                replicationResponseEntity.getStatusCode())
+                );
             }
         });
     }
@@ -133,7 +139,12 @@ public class ReplicationServiceImpl implements ReplicationService {
                     location
             );
 
-            log.info("Got location data!");
+            log.info(
+                    String.format("%s %s: Received replication data about location %s from %d [%s]",
+                            coordinatorTag, replicationTag, location, sourceNode.getNodeId(),
+                            sourceNode.getNodeIPAddress()
+                    )
+            );
 
             final ResponseEntity<Void> replicationResponseEntity = restTemplate.postForEntity (
                     REPLICATION_URL,
@@ -144,11 +155,19 @@ public class ReplicationServiceImpl implements ReplicationService {
             );
 
             if(replicationResponseEntity.getStatusCode() != HttpStatus.OK) {
-                log.warning(String.format("Could replicate location: %s to node %d[%s]", location, destNode.getNodeId(), destNode.getNodeIPAddress()));
-                throw new RuntimeException(String.format("Could not replicate data to node: %d[%s]", destNode.getNodeId(), destNode.getNodeIPAddress()));
+                log.warning(
+                        String.format("%s %s: Could not replicate location: %s on node %d [%s] (HTTP Status: %s)",
+                                coordinatorTag, replicationTag, location,
+                                destNode.getNodeId(), destNode.getNodeIPAddress(),
+                                replicationResponseEntity.getStatusCode()
+                        )
+                );
+                throw new RuntimeException(
+                        String.format("Could not replicate location %s on node: %d [%s] (HTTP Status: %s)",
+                                location, destNode.getNodeId(), destNode.getNodeIPAddress(),
+                                replicationResponseEntity.getStatusCode())
+                );
             }
         });
     }
-
-    private final Predicate<NodeStatusDto> INTERNAL_NODE = nodeStatusDto -> NodeType.valueOf(nodeStatusDto.getNodeType()).equals(NodeType.INTERNAL);
 }
