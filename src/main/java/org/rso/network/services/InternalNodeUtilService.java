@@ -283,6 +283,9 @@ public class InternalNodeUtilService implements NodeUtilService {
 
         if(listOfIpAddresses.isEmpty()) {
 //            koniec elekcji jestem nowym koorynatorem
+
+            /* Election process is done. I am the new coordinator */
+
             comunicateAsNewCoordinator();
         } else {
 //            proces elekcji dla innych wezlow
@@ -336,6 +339,7 @@ public class InternalNodeUtilService implements NodeUtilService {
                 .nodeId(currentSelfNode.getNodeId())
                 .nodeIPAddress(currentSelfNode.getNodeIPAddress())
                 .nodeType(NodeType.INTERNAL_COORDINATOR)
+                .locations(currentSelfNode.getLocations())
                 .build();
 
         appProperty.removeNode(currentSelfNode.getNodeId());
