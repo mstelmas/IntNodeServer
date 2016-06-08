@@ -20,14 +20,14 @@ public class AppConfig {
         return new JobServiceImpl();
     }
 
-    @Bean
-    public LocationMap locationMap(){
-        LocationMap locationMap = new LocationMap();
-        for(Location location: Location.values()){
-            locationMap.addEntry(location,appProperty.getSelfNode());
-        }
-        return locationMap;
-    }
+//    @Bean
+//    public LocationMap locationMap(){
+//        LocationMap locationMap = new LocationMap();
+//        for(Location location: Location.values()){
+//            locationMap.addEntry(location,appProperty.getSelfNode());
+//        }
+//        return locationMap;
+//    }
 
     @Bean
     public JobQueue jobQueue(){

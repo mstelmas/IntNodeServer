@@ -2,6 +2,9 @@ package org.rso.dto;
 
 import org.rso.entities.Graduate;
 import org.rso.entities.University;
+import org.rso.network.dto.NetworkStatusDto;
+import org.rso.network.dto.NodeStatusDto;
+import org.rso.utils.NetworkStatus;
 import org.rso.utils.NodeInfo;
 import org.rso.utils.NodeType;
 
@@ -9,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+
+import static java.util.stream.Collectors.toList;
 
 public class DtoConverters {
 
@@ -53,6 +58,12 @@ public class DtoConverters {
                     .location(entity.getLocation())
                     .universityType(entity.getUniversityType())
                     .value(Optional.ofNullable(entity.getGraduates()).map(List::size).orElse(0))
+                    .build();
+
+    public static Function<NetworkStatus, NetworkStatusDto> networkStatusEntityToDto = entity ->
+            NetworkStatusDto.builder()
+                    .coordinator(DtoConverters.nodeInfoToNodeStatusDto.apply(entity.getCoordinator()))
+                    .nodes(entity.getNodes().stream().map(DtoConverters.nodeInfoToNodeStatusDto).collect(toList()))
                     .build();
 
 }

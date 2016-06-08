@@ -5,11 +5,11 @@ import lombok.Setter;
 import lombok.extern.java.Log;
 import org.rso.exceptions.NodeNotFoundException;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Log
 public class AppProperty {
@@ -93,7 +93,7 @@ public class AppProperty {
         this.listOfAvaiableNodes.add(n);
     }
 
-    public synchronized void removeUnAvaiableNode(int nodeId){
+    public synchronized void removeNode(int nodeId){
         this.listOfAvaiableNodes = listOfAvaiableNodes.stream().
                                     filter(p -> p.getNodeId() != nodeId).
                                     collect(Collectors.toCollection(ArrayList::new));
@@ -107,7 +107,38 @@ public class AppProperty {
         return selfNode.equals(coordinatorNode);
     }
 
+    public NetworkStatus getNetworkStatus() {
+        return NetworkStatus.builder()
+                .coordinator(appProperty.getCoordinatorNode())
+                .nodes(appProperty.getAvailableNodes().stream().collect(toList()))
+                .build();
+    }
 
+    public List<NodeInfo> getAllNodes() {
+        final List<NodeInfo> collect = getAvailableNodes().stream().collect(Collectors.toList());
+        collect.add(getCoordinatorNode());
+        return collect;
+    }
+
+    public Map<Location, List<NodeInfo>> getReplicationMap() {
+        final Map<Location, List<NodeInfo>> replicationMap = new HashMap<>();
+
+        getAllNodes().stream()
+                    .forEach(nodeInfo ->
+                            Optional.ofNullable(nodeInfo.getLocations())
+                                .ifPresent(locations -> locations.forEach(location -> {
+                                    if(replicationMap.containsKey(location)) {
+                                        replicationMap.get(location).add(nodeInfo);
+                                    } else {
+                                        final List<NodeInfo> nodeInfos = new ArrayList<>();
+                                        nodeInfos.add(nodeInfo);
+                                        replicationMap.put(location, nodeInfos);
+                                    }
+                                }))
+                            );
+
+        return replicationMap;
+    }
 
 
     public NodeInfo getNodeById(final int nodeId) throws NodeNotFoundException {

@@ -1,6 +1,7 @@
 package org.rso.utils;
 
 import com.google.common.base.Predicate;
+import javaslang.control.Try;
 import org.rso.dto.GraduateDto;
 import org.rso.entities.FieldOfStudy;
 import org.rso.entities.Graduate;
@@ -10,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -35,9 +33,12 @@ public class DataBasePopulator {
     public void init() {
         universityRepository.clear();
 
-        if(appProperty.isSelfNodeCoordinator()) {
-            populateDB();
-        }
+        Try.of(appProperty::isSelfNodeCoordinator)
+                .onSuccess(isSelfNodeCoordinator -> {
+                    if (isSelfNodeCoordinator) {
+                        populateDB();
+                    }
+                });
     }
 
     private void populateDB() {

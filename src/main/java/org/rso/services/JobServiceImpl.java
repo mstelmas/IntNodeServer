@@ -5,6 +5,9 @@ import org.rso.configuration.LocationMap;
 import org.rso.dto.*;
 import org.rso.entities.FieldOfStudy;
 import org.rso.entities.responseObject.LocationMapResponse;
+import org.rso.network.dto.NetworkStatusDto;
+import org.rso.network.dto.NodeStatusDto;
+import org.rso.network.services.NodeNetworkService;
 import org.rso.utils.AppProperty;
 import org.rso.utils.ComeFrom;
 import org.rso.utils.JobQueue;
@@ -24,12 +27,10 @@ import javax.annotation.Resource;
 import java.lang.reflect.Type;
 import java.util.*;
 
-/**
- * Created by Radosław on 23.05.2016.
- */
+
+@Log
 @Service
 @Transactional
-@Log
 public class JobServiceImpl implements JobService {
 
     private final static int EXTERNAL_NODES_PORT = 9000;
@@ -37,15 +38,10 @@ public class JobServiceImpl implements JobService {
     @Autowired
     private JobQueue jobQueue;
 
-    @Autowired
-    private LocationMap locationMap;
-
     @Resource
     private NodeNetworkService nodeNetworkService;
 
     private final AppProperty appProperty = AppProperty.getInstance();
-
-    private final Random random = new Random();
 
     private final RestTemplate restTemplate = new RestTemplate();
 

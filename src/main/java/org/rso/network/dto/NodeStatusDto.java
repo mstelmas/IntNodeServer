@@ -1,4 +1,4 @@
-package org.rso.dto;
+package org.rso.network.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -7,16 +7,12 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.rso.configuration.services.NodesCfgService;
-import org.rso.services.InternalNodeUtilService;
-import org.rso.services.NodeUtilService;
+import org.rso.network.services.InternalNodeConnectorService;
 import org.rso.utils.AppProperty;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -69,12 +65,13 @@ public class IntNodeServerApplication implements CommandLineRunner{
 					}).andThen((commandLine -> {
 						final String nodeIpAddress = commandLine.getOptionValue("node-address");
 
+
 						final AnnotationConfigApplicationContext configurationCtx = new AnnotationConfigApplicationContext(CommandLineContext.class);
-						final NodeUtilService nodeUtilService = configurationCtx.getBean("internalNodeUtilService", NodeUtilService.class);
+						final InternalNodeConnectorService internalNodeConnectorService = configurationCtx.getBean("nodeConnectorService", InternalNodeConnectorService.class);
 
 						SpringApplication.run(IntNodeServerApplication.class, args);
 
-						nodeUtilService.connectToNetwork(nodeIpAddress);
+						internalNodeConnectorService.connectToNetwork(nodeIpAddress);
 
 						configurationCtx.close();
 
@@ -123,9 +120,10 @@ public class IntNodeServerApplication implements CommandLineRunner{
 			return new PropertySourcesPlaceholderConfigurer();
 		}
 
-		@Bean(name = "internalNodeUtilService")
-		public NodeUtilService nodeUtilService() {
-			return new InternalNodeUtilService();
+		@Bean(name = "nodeConnectorService")
+		public InternalNodeConnectorService internalNodeConnectorService() {
+			return new InternalNodeConnectorService();
 		}
+
 	}
 }

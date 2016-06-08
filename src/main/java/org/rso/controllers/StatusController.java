@@ -4,7 +4,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 import org.rso.dto.DtoConverters;
-import org.rso.dto.NetworkStatusDto;
+import org.rso.network.dto.NetworkStatusDto;
 import org.rso.utils.AppProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
