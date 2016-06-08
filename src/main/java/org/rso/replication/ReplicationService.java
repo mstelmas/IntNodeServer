@@ -2,8 +2,8 @@ package org.rso.replication;
 
 import javaslang.control.Try;
 import lombok.NonNull;
-import org.rso.utils.Location;
-import org.rso.utils.NodeInfo;
+import org.rso.storage.types.Location;
+import org.rso.network.NodeInfo;
 
 import java.util.List;
 

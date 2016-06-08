@@ -2,7 +2,7 @@ package org.rso.storage.dto;
 
 import lombok.*;
 import lombok.experimental.Wither;
-import org.rso.utils.Location;
+import org.rso.storage.types.Location;
 
 @Builder
 @Data

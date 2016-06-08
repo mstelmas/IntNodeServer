@@ -2,8 +2,8 @@ package org.rso.network.tasks;
 
 import lombok.extern.java.Log;
 import org.rso.network.services.NodeUtilService;
-import org.rso.utils.AppProperty;
-import org.rso.utils.NodeType;
+import org.rso.configuration.services.AppProperty;
+import org.rso.network.types.NodeType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

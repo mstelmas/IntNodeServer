@@ -8,8 +8,8 @@ import org.rso.network.dto.NodeStatusDto;
 import org.rso.network.exceptions.NodeNotFoundException;
 import org.rso.network.services.NodeNetworkService;
 import org.rso.replication.ReplicationServiceImpl;
-import org.rso.utils.AppProperty;
-import org.rso.utils.NodeInfo;
+import org.rso.configuration.services.AppProperty;
+import org.rso.network.NodeInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +20,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

@@ -5,8 +5,8 @@ import org.rso.storage.dto.*;
 import org.rso.storage.entities.FieldOfStudy;
 import org.rso.storage.entities.Graduate;
 import org.rso.storage.entities.University;
-import org.rso.utils.ComeFrom;
-import org.rso.utils.Location;
+import org.rso.storage.types.ComeFrom;
+import org.rso.storage.types.Location;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 

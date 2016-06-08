@@ -1,4 +1,4 @@
-package org.rso.storage.controllers;
+package org.rso.jobs;
 
 import lombok.extern.java.Log;
 import org.rso.storage.dto.JobEntityDto;
@@ -16,16 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/job")
 public class JobController {
+
     @Autowired
     private JobService jobService;
 
-
-    @RequestMapping(value = "/registerJob",method = RequestMethod.PUT)
-    public ResponseEntity registerJob(@RequestBody JobEntityDto jobEntityDto){
-//        log.info("job to register " + jobEntityDto.toString());
+    @RequestMapping(value = "/registerJob", method = RequestMethod.PUT)
+    public ResponseEntity registerJob(@RequestBody final JobEntityDto jobEntityDto) {
+        log.info(String.format("Registering new job: %s", jobEntityDto));
         jobService.registerJob(jobEntityDto);
-        return new ResponseEntity("ok", HttpStatus.OK);
+
+        return ResponseEntity.ok().build();
     }
-
-
 }

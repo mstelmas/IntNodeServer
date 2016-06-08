@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.rso.utils.Location;
+import org.rso.storage.types.Location;
 
 import java.util.List;
 

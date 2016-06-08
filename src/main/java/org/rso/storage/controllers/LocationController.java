@@ -3,7 +3,7 @@ package org.rso.storage.controllers;
 import lombok.extern.java.Log;
 import org.rso.storage.entities.University;
 import org.rso.storage.repositories.UniversityRepo;
-import org.rso.utils.Location;
+import org.rso.storage.types.Location;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;

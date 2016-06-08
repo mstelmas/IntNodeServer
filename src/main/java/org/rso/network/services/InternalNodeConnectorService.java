@@ -6,7 +6,7 @@ import lombok.extern.java.Log;
 import org.rso.DtoConverters;
 import org.rso.network.dto.NetworkStatusDto;
 import org.rso.network.dto.NodeStatusDto;
-import org.rso.utils.AppProperty;
+import org.rso.configuration.services.AppProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

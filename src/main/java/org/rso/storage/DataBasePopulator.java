@@ -1,4 +1,4 @@
-package org.rso.utils;
+package org.rso.storage;
 
 import com.google.common.base.Predicate;
 import javaslang.control.Try;
@@ -7,6 +7,10 @@ import org.rso.storage.entities.FieldOfStudy;
 import org.rso.storage.entities.Graduate;
 import org.rso.storage.entities.University;
 import org.rso.storage.repositories.UniversityRepository;
+import org.rso.storage.types.ComeFrom;
+import org.rso.configuration.services.AppProperty;
+import org.rso.storage.types.Location;
+import org.rso.storage.types.UniversityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

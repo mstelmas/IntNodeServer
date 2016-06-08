@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 
 @Configuration
 public class MongoConfig extends AbstractMongoConfiguration {
+
     @Override
     protected String getDatabaseName() {
         return "rsoDB";
@@ -15,12 +16,7 @@ public class MongoConfig extends AbstractMongoConfiguration {
 
     @Bean
     public Mongo mongo() throws Exception {
-        return new Fongo(getDatabaseName()).getMongo();
-//        return new Mongo();
+        return new Fongo(getDatabaseName())
+                .getMongo();
     }
-
-//    @Bean
-//    public MongoTemplate mongoTemplate() throws Exception {
-//        return new MongoTemplate(mongo(),getDatabaseName());
-//    }
 }

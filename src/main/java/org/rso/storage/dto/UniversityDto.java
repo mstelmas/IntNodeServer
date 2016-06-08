@@ -2,8 +2,8 @@ package org.rso.storage.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
-import org.rso.utils.Location;
-import org.rso.utils.UniversityType;
+import org.rso.storage.types.Location;
+import org.rso.storage.types.UniversityType;
 
 @Data
 @AllArgsConstructor

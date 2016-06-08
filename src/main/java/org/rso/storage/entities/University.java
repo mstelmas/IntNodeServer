@@ -1,8 +1,8 @@
 package org.rso.storage.entities;
 
 import lombok.*;
-import org.rso.utils.Location;
-import org.rso.utils.UniversityType;
+import org.rso.storage.types.Location;
+import org.rso.storage.types.UniversityType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

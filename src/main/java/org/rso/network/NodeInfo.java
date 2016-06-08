@@ -1,6 +1,8 @@
-package org.rso.utils;
+package org.rso.network;
 
 import lombok.*;
+import org.rso.storage.types.Location;
+import org.rso.network.types.NodeType;
 
 import java.util.List;
 

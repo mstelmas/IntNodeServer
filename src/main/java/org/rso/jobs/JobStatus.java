@@ -1,8 +1,5 @@
-package org.rso.utils;
+package org.rso.jobs;
 
-/**
- * Created by Radosław on 19.05.2016.
- */
 public enum JobStatus {
     ACCEPTED, IN_PRORES, FINISHED, RECIVED;
 }

@@ -2,7 +2,7 @@ package org.rso.storage.controllers;
 
 import lombok.extern.java.Log;
 import org.rso.storage.services.MongoAppService;
-import org.rso.utils.Location;
+import org.rso.storage.types.Location;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

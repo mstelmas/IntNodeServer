@@ -2,9 +2,9 @@ package org.rso.configuration.services;
 
 import com.google.common.collect.ImmutableList;
 import lombok.Setter;
-import org.rso.utils.Location;
-import org.rso.utils.NodeInfo;
-import org.rso.utils.NodeType;
+import org.rso.storage.types.Location;
+import org.rso.network.NodeInfo;
+import org.rso.network.types.NodeType;
 
 import java.util.*;
 import java.util.function.Predicate;

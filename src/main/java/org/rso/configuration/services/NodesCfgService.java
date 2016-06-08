@@ -1,6 +1,6 @@
 package org.rso.configuration.services;
 
-import org.rso.utils.NodeInfo;
+import org.rso.network.NodeInfo;
 
 import java.util.List;
 

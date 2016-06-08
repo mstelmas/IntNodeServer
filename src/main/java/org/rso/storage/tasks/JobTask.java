@@ -3,9 +3,9 @@ package org.rso.storage.tasks;
 import lombok.extern.java.Log;
 import org.rso.storage.dto.JobEntityDto;
 import org.rso.storage.services.JobService;
-import org.rso.utils.AppProperty;
-import org.rso.utils.JobQueue;
-import org.rso.utils.JobType;
+import org.rso.configuration.services.AppProperty;
+import org.rso.jobs.JobQueue;
+import org.rso.jobs.JobType;
 
 /**
  * Created by Radosław on 23.05.2016.

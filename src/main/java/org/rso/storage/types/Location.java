@@ -1,4 +1,4 @@
-package org.rso.utils;
+package org.rso.storage.types;
 
 public enum Location {
     ZACHODNIO_POMORSKIE,

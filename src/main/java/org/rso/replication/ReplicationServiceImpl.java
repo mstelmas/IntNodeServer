@@ -6,9 +6,9 @@ import lombok.extern.java.Log;
 import org.rso.DtoConverters;
 import org.rso.storage.dto.UniversityDto;
 import org.rso.storage.repositories.UniversityRepo;
-import org.rso.utils.AppProperty;
-import org.rso.utils.Location;
-import org.rso.utils.NodeInfo;
+import org.rso.configuration.services.AppProperty;
+import org.rso.storage.types.Location;
+import org.rso.network.NodeInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.xml.soap.Node;
 import java.util.*;
 import java.util.stream.Collectors;
 

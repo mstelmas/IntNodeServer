@@ -2,7 +2,6 @@ package org.rso.network;
 
 import lombok.Builder;
 import lombok.Data;
-import org.rso.utils.NodeInfo;
 
 import java.util.List;
 

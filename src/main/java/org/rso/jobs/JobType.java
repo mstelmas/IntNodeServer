@@ -1,8 +1,7 @@
-package org.rso.utils;
+package org.rso.jobs;
 
-/**
- * Created by Radosław on 19.05.2016.
- */
+import lombok.Getter;
+
 public enum JobType {
     GET_GRADUATES_FROM_ALL_COUNTRIES("/resp/allCountries"),
     GET_GRADUATES_FROM_ALL_UNIVERSITIES("/resp/universities"),
@@ -17,14 +16,10 @@ public enum JobType {
     GET_STATISTIC_WORKING_STUDENTS_COUNTRIES("/resp/working/countries"),
     GET_STATISTIC_WORKING_STUDENTS_UNIVERSITIES("/resp/working/universities");
 
-    private String url;
+    @Getter private String url;
     private static final String BEGIN = "/jobs";
 
-    JobType(String url) {
-        this.url = BEGIN+url;
-    }
-
-    public String getUrl() {
-        return url;
+    JobType(final String url) {
+        this.url = BEGIN + url;
     }
 }

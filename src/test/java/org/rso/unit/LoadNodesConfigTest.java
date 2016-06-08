@@ -5,8 +5,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.rso.configuration.services.NodesCfgService;
-import org.rso.utils.NodeInfo;
-import org.rso.utils.NodeType;
+import org.rso.network.NodeInfo;
+import org.rso.network.types.NodeType;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 

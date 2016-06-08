@@ -3,7 +3,7 @@ package org.rso.network.controllers;
 import lombok.extern.java.Log;
 import org.rso.DtoConverters;
 import org.rso.network.dto.NodeStatusDto;
-import org.rso.utils.AppProperty;
+import org.rso.configuration.services.AppProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

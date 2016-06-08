@@ -8,8 +8,8 @@ import org.rso.storage.dto.UniversityDto;
 import org.rso.storage.entities.University;
 import org.rso.storage.repositories.UniversityRepo;
 import org.rso.storage.repositories.UniversityRepository;
-import org.rso.utils.AppProperty;
-import org.rso.utils.Location;
+import org.rso.configuration.services.AppProperty;
+import org.rso.storage.types.Location;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

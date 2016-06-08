@@ -1,7 +1,7 @@
 package org.rso.storage.repositories;
 
 import org.rso.storage.entities.University;
-import org.rso.utils.Location;
+import org.rso.storage.types.Location;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

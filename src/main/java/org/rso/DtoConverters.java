@@ -7,8 +7,8 @@ import org.rso.storage.dto.GraduateDto;
 import org.rso.storage.dto.UniversityDto;
 import org.rso.storage.entities.Graduate;
 import org.rso.storage.entities.University;
-import org.rso.utils.NodeInfo;
-import org.rso.utils.NodeType;
+import org.rso.network.NodeInfo;
+import org.rso.network.types.NodeType;
 
 import java.util.ArrayList;
 import java.util.Collections;

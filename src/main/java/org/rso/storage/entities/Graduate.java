@@ -1,8 +1,8 @@
 package org.rso.storage.entities;
 
 import lombok.*;
-import org.rso.utils.ComeFrom;
-import org.rso.utils.Location;
+import org.rso.storage.types.ComeFrom;
+import org.rso.storage.types.Location;
 
 import java.util.ArrayList;
 import java.util.List;

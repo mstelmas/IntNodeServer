@@ -1,17 +1,6 @@
 package org.rso.configuration;
 
 
-import com.google.common.collect.ImmutableMap;
-import lombok.NonNull;
-import org.rso.utils.AppProperty;
-import org.rso.utils.Location;
-import org.rso.utils.NodeInfo;
-
-import java.util.*;
-
-import static java.util.stream.Collectors.toList;
-
-
 public class LocationMap {
 
 //    private final AppProperty appProperty = AppProperty.getInstance();

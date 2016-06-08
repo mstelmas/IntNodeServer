@@ -5,7 +5,7 @@ import javaslang.control.Try;
 import lombok.NonNull;
 import org.rso.network.dto.NetworkStatusDto;
 import org.rso.network.dto.NodeStatusDto;
-import org.rso.utils.NodeInfo;
+import org.rso.network.NodeInfo;
 
 public interface NodeNetworkService {
     Try<NetworkStatusDto> getNetworkStatus();
