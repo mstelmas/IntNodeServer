@@ -223,7 +223,12 @@ public class InternalNodeUtilService implements NodeUtilService {
                                             replicationDestination.getNodeId(), replicationDestination.getNodeIPAddress())
                             );
 
-                            appProperty.getNodeById(replicationDestination.getNodeId()).getLocations().add(locationToReplicate);
+                            if(appProperty.getCoordinatorNode().equals(replicationDestination)) {
+                                appProperty.getCoordinatorNode().getLocations().add(locationToReplicate);
+                            } else {
+                                appProperty.getNodeById(replicationDestination.getNodeId()).getLocations().add(locationToReplicate);
+                            }
+
                         })
                         .onFailure(e -> {
                             log.warning(
