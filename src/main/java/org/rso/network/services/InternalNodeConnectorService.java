@@ -4,9 +4,9 @@ package org.rso.network.services;
 import javaslang.control.Try;
 import lombok.extern.java.Log;
 import org.rso.DtoConverters;
+import org.rso.configuration.services.AppProperty;
 import org.rso.network.dto.NetworkStatusDto;
 import org.rso.network.dto.NodeStatusDto;
-import org.rso.configuration.services.AppProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Log
 @Service("nodeConnectorService")
@@ -85,20 +84,21 @@ public class InternalNodeConnectorService {
                         NodeStatusDto.class
                 );
 
-                final NetworkStatusDto updatedNetworkStatusDto = restTemplate.getForObject(
-                        STATUS_URL,
-                        NetworkStatusDto.class,
-                        nodeIpAddress,
-                        DEFAULT_NODES_PORT
-                );
-
                 appProperty.setSelfNode(DtoConverters.nodeStatusDtoToNodeInfo.apply(createdNodeDto));
-                appProperty.setCoordinatorNode(DtoConverters.nodeStatusDtoToNodeInfo.apply(updatedNetworkStatusDto.getCoordinator()));
-                appProperty.setListOfAvaiableNodes(
-                        updatedNetworkStatusDto.getNodes().stream()
-                                .map(DtoConverters.nodeStatusDtoToNodeInfo)
-                                .collect(Collectors.toList())
-                );
+
+//                final NetworkStatusDto updatedNetworkStatusDto = restTemplate.getForObject(
+//                        STATUS_URL,
+//                        NetworkStatusDto.class,
+//                        nodeIpAddress,
+//                        DEFAULT_NODES_PORT
+//                );
+
+//                appProperty.setCoordinatorNode(DtoConverters.nodeStatusDtoToNodeInfo.apply(updatedNetworkStatusDto.getCoordinator()));
+//                appProperty.setListOfAvaiableNodes(
+//                        updatedNetworkStatusDto.getNodes().stream()
+//                                .map(DtoConverters.nodeStatusDtoToNodeInfo)
+//                                .collect(Collectors.toList())
+//                );
 
 
             } else {

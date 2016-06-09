@@ -223,7 +223,12 @@ public class InternalNodeUtilService implements NodeUtilService {
                                             replicationDestination.getNodeId(), replicationDestination.getNodeIPAddress())
                             );
 
-                            appProperty.getNodeById(replicationDestination.getNodeId()).getLocations().add(locationToReplicate);
+                            if(appProperty.getCoordinatorNode().equals(replicationDestination)) {
+                                appProperty.getCoordinatorNode().getLocations().add(locationToReplicate);
+                            } else {
+                                appProperty.getNodeById(replicationDestination.getNodeId()).getLocations().add(locationToReplicate);
+                            }
+
                         })
                         .onFailure(e -> {
                             log.warning(
@@ -283,6 +288,9 @@ public class InternalNodeUtilService implements NodeUtilService {
 
         if(listOfIpAddresses.isEmpty()) {
 //            koniec elekcji jestem nowym koorynatorem
+
+            /* Election process is done. I am the new coordinator */
+
             comunicateAsNewCoordinator();
         } else {
 //            proces elekcji dla innych wezlow
@@ -304,6 +312,7 @@ public class InternalNodeUtilService implements NodeUtilService {
                     }
                 }catch (Exception e){
                     log.info(String.format("%s: Exception during election procedure - host %s not found", electionTag, ip));
+                    throw new RuntimeException(String.format("Critical error during election procedure %s", e));
                 }
 
             }
@@ -332,16 +341,62 @@ public class InternalNodeUtilService implements NodeUtilService {
 
         final NodeInfo currentSelfNode = appProperty.getSelfNode();
 
+        final NodeInfo oldCoordinatorNode = appProperty.getCoordinatorNode();
+
+        /////////////////////////////////////////////////////////////
+        /* Coordinator stopped responding. We need to: */
+
+        /* 1. Replicate data placed on that coordinator */
+        final Optional<List<Location>> locationsStoredOnCoordinator = Optional.ofNullable(oldCoordinatorNode.getLocations());
+
+        if(!locationsStoredOnCoordinator.isPresent()) {
+            log.info(
+                    String.format("%s %s: Old coordinator %d [%s] contains uninitialized reference to collection of locations." +
+                                    "Data integrity might be 'compromised'. Aborting replication!",
+                            coordinatorTag, replicationTag, oldCoordinatorNode.getNodeId(), oldCoordinatorNode.getNodeIPAddress())
+            );
+
+            throw new RuntimeException(
+                    String.format("Uninitialized reference to locations stored on node %d [%s]",
+                            oldCoordinatorNode.getNodeId(), oldCoordinatorNode.getNodeIPAddress())
+            );
+        }
+
         final NodeInfo newCoordinatorNode = NodeInfo.builder()
                 .nodeId(currentSelfNode.getNodeId())
                 .nodeIPAddress(currentSelfNode.getNodeIPAddress())
                 .nodeType(NodeType.INTERNAL_COORDINATOR)
+                .locations(currentSelfNode.getLocations())
                 .build();
 
         appProperty.removeNode(currentSelfNode.getNodeId());
-
         appProperty.setCoordinatorNode(newCoordinatorNode);
         appProperty.setSelfNode(newCoordinatorNode);
+
+        if(locationsStoredOnCoordinator.get().isEmpty()) {
+            log.info(
+                    String.format("%s %s: Old coordinator %d [%s] did not store any data! There is no need for any replication!",
+                            coordinatorTag, replicationTag, oldCoordinatorNode.getNodeId(), oldCoordinatorNode.getNodeIPAddress())
+            );
+        } else {
+            log.info(
+                    String.format("%s %s: Old coordinator %d [%s] stored the following data: %s. The need for data replication is real :(",
+                            coordinatorTag, replicationTag,
+                            oldCoordinatorNode.getNodeId(), oldCoordinatorNode.getNodeIPAddress(),
+                            oldCoordinatorNode.getLocations())
+            );
+
+
+            final NetworkStatus currentNetworkStatus = appProperty.getNetworkStatus();
+
+            if(currentNetworkStatus.getNodes().isEmpty()) {
+                log.info(
+                        String.format("%s %s: Network does not contain any nodes. Aborting replication...", coordinatorTag, replicationTag)
+                );
+            } else {
+                replicateLocations(locationsStoredOnCoordinator.get());
+            }
+        }
 
         log.info(String.format("%s: I am the new coordinator! %s", coordinatorTag, appProperty.getSelfNode()));
 
@@ -363,6 +418,22 @@ public class InternalNodeUtilService implements NodeUtilService {
                 log.info(String.format("%s %s: Elected coordinator update returned status: %s", coordinatorTag, electionTag, newCoordinatorResponseEntity.getStatusCode()));
             }).onFailure(e -> log.info(String.format("%s %s: Node %s stopped responding? %s", coordinatorTag, heartbeatTag, nodeIpAddress, e.getMessage())));
         });
+
+        /* 3. Inform all the remaining nodes about changes in network */
+        final NetworkStatusDto updatedNetworkStatusDto = DtoConverters.networkStatusEntityToDto.apply(
+                appProperty.getNetworkStatus()
+        );
+
+        appProperty.getAvailableNodes().forEach(availableNodeInfo ->
+                nodeNetworkService.setNetworkStatus(availableNodeInfo, updatedNetworkStatusDto)
+                        .onFailure(ez ->
+                                                /* A node suddenly stopped responding; we don't need to do anything here though
+                                                   since it will be removed during the next Heartbeat check iteration anyway.
+                                                 */
+                                log.info(String.format("%s %s: Node %s stopped responding during network status update. It should be removed in the next Heartbeat check",
+                                        coordinatorTag, managementTag, availableNodeInfo.getNodeIPAddress()))
+                        )
+        );
 
         log.info(String.format("%s %s: Election process completed!", coordinatorTag, electionTag));
     }

@@ -4,13 +4,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.java.Log;
 import org.rso.DtoConverters;
-import org.rso.network.dto.NetworkStatusDto;
 import org.rso.configuration.services.AppProperty;
+import org.rso.network.dto.NetworkStatusDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
@@ -40,6 +42,12 @@ public class StatusController {
 
         appProperty.setCoordinatorNode(DtoConverters.nodeStatusDtoToNodeInfo.apply(networkStatusDto.getCoordinator()));
         appProperty.setListOfAvaiableNodes(networkStatusDto.getNodes().stream().map(DtoConverters.nodeStatusDtoToNodeInfo).collect(toList()));
+
+        Optional.ofNullable(appProperty.getSelfNode())
+                .ifPresent(selfNode ->
+                    Optional.ofNullable(appProperty.getNodeById(selfNode.getNodeId()))
+                            .ifPresent(appProperty::setSelfNode)
+                );
 
         return ResponseEntity.noContent().build();
     }
