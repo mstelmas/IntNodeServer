@@ -7,7 +7,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.rso.configuration.services.NodesCfgService;
-import org.rso.network.services.InternalNodeConnectorService;
+import org.rso.configuration.services.InternalNodeConnectorService;
 import org.rso.configuration.services.AppProperty;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
