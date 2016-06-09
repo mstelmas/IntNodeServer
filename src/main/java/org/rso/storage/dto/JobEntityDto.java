@@ -1,5 +1,6 @@
 package org.rso.storage.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import org.rso.storage.entities.responseObject.ResponseBody;
 import org.rso.jobs.JobStatus;

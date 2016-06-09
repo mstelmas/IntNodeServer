@@ -1,4 +1,4 @@
-package org.rso.network.services;
+package org.rso.configuration.services;
 
 
 import javaslang.control.Try;
