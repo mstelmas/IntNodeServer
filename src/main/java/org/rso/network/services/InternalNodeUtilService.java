@@ -287,18 +287,11 @@ public class InternalNodeUtilService implements NodeUtilService {
         final List<String> listOfIpAddresses = getAvailableIPAddresses(appProperty.getAvailableNodes(), selfNodeId);
 
         if(listOfIpAddresses.isEmpty()) {
-//            koniec elekcji jestem nowym koorynatorem
-
             /* Election process is done. I am the new coordinator */
-
             comunicateAsNewCoordinator();
         } else {
-//            proces elekcji dla innych wezlow
-
             for(String ip: listOfIpAddresses){
-
                 try {
-
                     final NodeStatusDto info = restTemplate.postForObject(
                             ELECTION_URL,
                             appProperty.getSelfNode(),
@@ -306,27 +299,28 @@ public class InternalNodeUtilService implements NodeUtilService {
                             ip,
                             DEFAULT_NODES_PORT
                     );
-                    log.info("info "+ info);
-                    if(info.getNodeId()>selfNodeId){
+
+                    if(info.getNodeId() > selfNodeId) {
                         return;
                     }
-                }catch (Exception e){
+
+                } catch (final Exception e){
                     log.info(String.format("%s: Exception during election procedure - host %s not found", electionTag, ip));
                     throw new RuntimeException(String.format("Critical error during election procedure %s", e));
                 }
-
             }
         }
     }
 
     /* TODO: Refactor using Yoda Time */
     public void verifyCoordinatorPresence() {
-        Date lastPresence = appProperty.getLastCoordinatorPresence();
+        final Date lastPresence = appProperty.getLastCoordinatorPresence();
         final NodeInfo currentCoordinator = appProperty.getCoordinatorNode();
-//        log.info("koordynator obecny byl ostatnio " + DataTimeLogger.logTime(lastPresence));
+
         log.info(String.format("Coordinator (id = %s, IP = %s) last seen: %s",
                 currentCoordinator.getNodeId(), currentCoordinator.getNodeIPAddress(), DataTimeLogger.logTime(lastPresence)));
-        long dif = DateComparator.compareDate(lastPresence,new Date());
+
+        final long dif = DateComparator.compareDate(lastPresence, new Date());
 
         if(dif > electionDelay){
             doElection();
